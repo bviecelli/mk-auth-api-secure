@@ -4,13 +4,13 @@ import requests, json
 app = Flask(__name__)
 
 
-def mkLogin(username, passwd):
+def mk_login(username, passwd):
     resp = requests.get('http://192.168.1.200/api/83fdf5e05ffb52a01f37c22b27e0da07/cliente/list/'+username)
     if resp.status_code == 200:
-        json = resp.json()
-        if json == 'NULL':
+        json_data = resp.json()
+        if json_data == 'NULL':
             return False
-        if json['dados'][0]['senha'] == passwd:
+        if json_data['dados'][0]['senha'] == passwd:
             return True
     return False
 
@@ -39,18 +39,18 @@ def titulos():
     resp = req.json()
     if resp == 'NULL':
         return 'Error: content not found!'
-    billList = []
+    bill_list = []
     for item in resp['titulos']:
         if item['login'] == session['username']:
-            billList.append(item)
-    json_ret = json.dumps(billList)
+            bill_list.append(item)
+    json_ret = json.dumps(bill_list)
     return json_ret
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        if mkLogin(request.form['username'], request.form['password']):
+        if mk_login(request.form['username'], request.form['password']):
             session['username'] = request.form['username']
             return redirect(url_for('index'))
         return redirect(url_for('login'))
