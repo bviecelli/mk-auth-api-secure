@@ -1,11 +1,27 @@
 from flask import Flask, session, redirect, url_for, escape, request
-import requests, json
+import requests
+import json
+from models import SisResumo, SisLanc
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import os
+from config import SERVER_ADDR
+
 
 app = Flask(__name__)
+API_KEY = '83fdf5e05ffb52a01f37c22b27e0da07'
+
+app_settings = os.getenv(
+    'APP_SETTINGS',
+    'config.DevelopmentConfig'
+)
+app.config.from_object(app_settings)
+db = SQLAlchemy(app)
 
 
 def mk_login(username, passwd):
-    resp = requests.get('http://192.168.1.200/api/83fdf5e05ffb52a01f37c22b27e0da07/cliente/list/'+username)
+    resp = requests.get('http://api:'+API_KEY+'@'+SERVER_ADDR+'/api/cliente/list/'+username)
     if resp.status_code == 200:
         json_data = resp.json()
         if json_data == 'NULL':
@@ -33,6 +49,9 @@ def index():
 def titulos():
     if 'username' not in session:
         return 'You are not logged in'
+    t_list = db_session.query(SisLanc).filter(SisLanc.login == session['username']).all()
+    for itm in t_list:
+        print(itm.valor)
     req = requests.get('http://192.168.1.200/api/83fdf5e05ffb52a01f37c22b27e0da07/titulo/list')
     if req.status_code != 200:
         return 'Error: mk-auth internal server error!'
@@ -74,6 +93,9 @@ app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 app.debug = True
 
 if __name__ == '__main__':
+    engine = create_engine("mysql://root:vertrigo@"+SERVER_ADDR+"/mkradius")
+    Session = sessionmaker(bind=engine)
+    db_session = Session()
     app.run()
 
 # TODO: Ajustar os retornos das páginas para formato JSON
