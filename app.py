@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
+import jsonpickle
 from config import SERVER_ADDR
 
 
@@ -50,18 +51,11 @@ def titulos():
     if 'username' not in session:
         return 'You are not logged in'
     t_list = db_session.query(SisLanc).filter(SisLanc.login == session['username']).all()
+
+    bill_list = []
     for itm in t_list:
         print(itm.valor)
-    req = requests.get('http://192.168.1.200/api/83fdf5e05ffb52a01f37c22b27e0da07/titulo/list')
-    if req.status_code != 200:
-        return 'Error: mk-auth internal server error!'
-    resp = req.json()
-    if resp == 'NULL':
-        return 'Error: content not found!'
-    bill_list = []
-    for item in resp['titulos']:
-        if item['login'] == session['username']:
-            bill_list.append(item)
+        bill_list.append(jsonpickle.encode(itm))
     json_ret = json.dumps(bill_list)
     return json_ret
 

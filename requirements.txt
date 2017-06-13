@@ -1,5 +1,7 @@
 flask
 requests
-sqlacodegen
+# sqlacodegen
 SQLAlchemy
 flask_sqlalchemy
+mysqlclient
+jsonpickle

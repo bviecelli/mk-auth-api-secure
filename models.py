@@ -1,6 +1,7 @@
 # coding: utf-8
 from sqlalchemy import BigInteger, Column, DateTime, Enum, Index, Integer, Numeric, String, Table, Text, text
 from sqlalchemy.ext.declarative import declarative_base
+from jsonpickle import handlers
 
 
 Base = declarative_base()
@@ -805,7 +806,7 @@ class SisIlanc(Base):
     token = Column(String(24), index=True)
 
 
-class SisLanc(Base):
+class SisLanc(Base, handlers.BaseHandler):
     __tablename__ = 'sis_lanc'
 
     id = Column(Integer, primary_key=True)
@@ -856,6 +857,20 @@ class SisLanc(Base):
     uuid_lanc = Column(String(48), index=True)
     tarifa_paga = Column(Numeric(12, 2), server_default=text("'0.00'"))
     id_empresa = Column(String(16), unique=True)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_sa_instance_state']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def flatten(self, obj, data):
+        data['contents'] = obj.contents
+        return data
+
+# handlers.register(SisLanc, handlers.BaseHandler)
 
 
 class SisLink(Base):
