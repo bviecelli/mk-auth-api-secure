@@ -1,7 +1,7 @@
 from flask import Flask, session, redirect, url_for, escape, request
-import requests
+# import requests
 import json
-from models import SisResumo, SisLanc
+from models import SisResumo, SisLanc, SisCliente, SisMsg, SisSuporte
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -22,14 +22,20 @@ db = SQLAlchemy(app)
 
 
 def mk_login(username, passwd):
-    resp = requests.get('http://api:'+API_KEY+'@'+SERVER_ADDR+'/api/cliente/list/'+username)
-    if resp.status_code == 200:
-        json_data = resp.json()
-        if json_data == 'NULL':
-            return False
-        if json_data['dados'][0]['senha'] == passwd:
-            return True
+    t_list = db_session.query(SisLanc).filter(SisLanc.login == username).all()
+    if t_list.size == 0:
+        return False
+    if t_list[0].senha == passwd:
+        return True
     return False
+    # resp = requests.get('http://api:'+API_KEY+'@'+SERVER_ADDR+'/api/cliente/list/'+username)
+    # if resp.status_code == 200:
+    #     json_data = resp.json()
+    #     if json_data == 'NULL':
+    #         return False
+    #     if json_data['dados'][0]['senha'] == passwd:
+    #         return True
+    # return False
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -54,19 +60,78 @@ def titulos():
 
     bill_list = []
     for itm in t_list:
-        print(itm.valor)
         bill_list.append(jsonpickle.encode(itm))
     json_ret = json.dumps(bill_list)
     return json_ret
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/conta')
+def conta():
+    if 'username' not in session:
+        return 'You are not logged in'
+    t_list = db_session.query(SisCliente).filter(SisCliente.login == session['username']).all()
+
+    c_list = []
+    for itm in t_list:
+        c_list.append(jsonpickle.encode(itm))
+    json_ret = json.dumps(c_list)
+    return json_ret
+
+
+@app.route('/resumo')
+def resumo():
+    if 'username' not in session:
+        return 'You are not logged in'
+    t_list = db_session.query(SisResumo).filter(SisResumo.login == session['username']).all()
+
+    c_list = []
+    for itm in t_list:
+        c_list.append(jsonpickle.encode(itm))
+    json_ret = json.dumps(c_list)
+    return json_ret
+
+
+@app.route('/msgs')
+def msgs():
+    if 'username' not in session:
+        return 'You are not logged in'
+    t_list = db_session.query(SisMsg).filter(SisMsg.login == session['username']).all()
+
+    c_list = []
+    for itm in t_list:
+        c_list.append(jsonpickle.encode(itm))
+    json_ret = json.dumps(c_list)
+    return json_ret
+
+
+@app.route('/chamados')
+def chamados():
+    if 'username' not in session:
+        return 'You are not logged in'
+    t_list = db_session.query(SisSuporte).filter(SisSuporte.login == session['username']).all()
+
+    c_list = []
+    for itm in t_list:
+        c_list.append(jsonpickle.encode(itm))
+    json_ret = json.dumps(c_list)
+    return json_ret
+
+
+@app.route('/login', methods=['POST'])
 def login():
+    if mk_login(request.form['username'], request.form['password']):
+        session['username'] = request.form['username']
+        return redirect(url_for('index'))
+    return redirect(url_for('login'))
+
+
+@app.route('/login_test', methods=['GET', 'POST'])
+def login_test():
     if request.method == 'POST':
         if mk_login(request.form['username'], request.form['password']):
             session['username'] = request.form['username']
             return redirect(url_for('index'))
-        return redirect(url_for('login'))
+        return redirect(url_for('login_test'))
     return '''
         <form method="post">
             <p><input type=text name=username>
@@ -92,7 +157,6 @@ if __name__ == '__main__':
     db_session = Session()
     app.run()
 
-# TODO: Ajustar os retornos das páginas para formato JSON
 # TODO: Trocar a key dos cookies
 # TODO: Trocar login via form para JSON
 # TODO: Utilizar JWT para todo o conteúdo JSON

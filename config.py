@@ -12,17 +12,15 @@ class BaseConfig:
     DEBUG = False
     BCRYPT_LOG_ROUNDS = 13
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_DATABASE_URI = mysql_local_base + database_name
 
 
 class DevelopmentConfig(BaseConfig):
     """Development configuration."""
     DEBUG = True
     BCRYPT_LOG_ROUNDS = 4
-    SQLALCHEMY_DATABASE_URI = mysql_local_base + database_name
 
 
 class ProductionConfig(BaseConfig):
     """Production configuration."""
-    SECRET_KEY = 'my_precious'
-    DEBUG = False
-    SQLALCHEMY_DATABASE_URI = 'mysql:///example'
+    SECRET_KEY = 'super_secret_key'

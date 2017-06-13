@@ -1,4 +1,7 @@
 # coding: utf-8
+
+# TODO: Filtrar informações de segurança nos métodos jsonpickle.handlers.__getstate__
+
 from sqlalchemy import BigInteger, Column, DateTime, Enum, Index, Integer, Numeric, String, Table, Text, text
 from sqlalchemy.ext.declarative import declarative_base
 from jsonpickle import handlers
@@ -197,7 +200,7 @@ class Registro(Base):
     chavetea = Column(String(50))
 
 
-class SisAcesso(Base):
+class SisAcesso(Base, handlers.BaseHandler):
     __tablename__ = 'sis_acesso'
 
     idacesso = Column(Integer, primary_key=True)
@@ -214,6 +217,18 @@ class SisAcesso(Base):
     key_onetime = Column(String(16))
     cli_grupos = Column(String(255), server_default=text("'full_clientes'"))
     sesid = Column(String(64), server_default=text("'5k0ahkfa9d9r0i6mucm0khlcdralfnf1'"))
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_sa_instance_state']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def flatten(self, obj, data):
+        data['contents'] = obj.contents
+        return data
 
 
 class SisAdicional(Base):
@@ -409,7 +424,7 @@ t_sis_central = Table(
 )
 
 
-class SisCliente(Base):
+class SisCliente(Base, handlers.BaseHandler):
     __tablename__ = 'sis_cliente'
 
     id = Column(Integer, primary_key=True)
@@ -539,6 +554,18 @@ class SisCliente(Base):
     conta_cartao = Column(Integer, server_default=text("'0'"))
     plano_bloqc = Column(String(64), index=True, server_default=text("'nenhum'"))
     uuid_cliente = Column(String(48), index=True)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_sa_instance_state']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def flatten(self, obj, data):
+        data['contents'] = obj.contents
+        return data
 
 
 class SisComprovante(Base):
@@ -785,7 +812,7 @@ t_sis_hotsite = Table(
 )
 
 
-class SisIlanc(Base):
+class SisIlanc(Base, handlers.BaseHandler):
     __tablename__ = 'sis_ilanc'
 
     inum = Column(Integer, primary_key=True)
@@ -804,6 +831,18 @@ class SisIlanc(Base):
     inst1 = Column(String(255))
     inst2 = Column(String(255))
     token = Column(String(24), index=True)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_sa_instance_state']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def flatten(self, obj, data):
+        data['contents'] = obj.contents
+        return data
 
 
 class SisLanc(Base, handlers.BaseHandler):
@@ -870,8 +909,6 @@ class SisLanc(Base, handlers.BaseHandler):
         data['contents'] = obj.contents
         return data
 
-# handlers.register(SisLanc, handlers.BaseHandler)
-
 
 class SisLink(Base):
     __tablename__ = 'sis_links'
@@ -905,7 +942,7 @@ class SisMlanc(Base):
     deltitulo = Column(Integer, index=True, server_default=text("'0'"))
 
 
-class SisMsg(Base):
+class SisMsg(Base, handlers.BaseHandler):
     __tablename__ = 'sis_msg'
 
     id = Column(Integer, primary_key=True)
@@ -915,6 +952,18 @@ class SisMsg(Base):
     login = Column(String(255), index=True)
     atendente = Column(String(255))
     msg_data = Column(DateTime)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_sa_instance_state']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def flatten(self, obj, data):
+        data['contents'] = obj.contents
+        return data
 
 
 class SisNewsletter(Base):
@@ -1133,7 +1182,7 @@ class SisProduto(Base):
     codigo = Column(String(50))
 
 
-class SisProvedor(Base):
+class SisProvedor(Base, handlers.BaseHandler):
     __tablename__ = 'sis_provedor'
 
     id = Column(Integer, primary_key=True)
@@ -1159,6 +1208,18 @@ class SisProvedor(Base):
     fistel = Column(String(32))
     coordenadas = Column(String(64), server_default=text("'-10.00,-50.00'"))
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_sa_instance_state']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def flatten(self, obj, data):
+        data['contents'] = obj.contents
+        return data
+
 
 class SisRemessa(Base):
     __tablename__ = 'sis_remessa'
@@ -1175,7 +1236,7 @@ class SisRemessa(Base):
     nomearq = Column(String(50))
 
 
-class SisResumo(Base):
+class SisResumo(Base, handlers.BaseHandler):
     __tablename__ = 'sis_resumo'
 
     id = Column(Integer, primary_key=True)
@@ -1189,6 +1250,18 @@ class SisResumo(Base):
     resumo = Column(String(6), server_default=text("'032011'"))
     login = Column(String(50), index=True)
     data = Column(DateTime)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_sa_instance_state']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def flatten(self, obj, data):
+        data['contents'] = obj.contents
+        return data
 
 
 class SisRetorno(Base):
@@ -1290,7 +1363,7 @@ class SisSolic(Base):
     dot_ref = Column(String(128))
 
 
-class SisSuporte(Base):
+class SisSuporte(Base, handlers.BaseHandler):
     __tablename__ = 'sis_suporte'
 
     id = Column(Integer, primary_key=True)
@@ -1310,6 +1383,18 @@ class SisSuporte(Base):
     tecnico = Column(Integer)
     login_atend = Column(String(63), index=True, server_default=text("'full_users'"))
     motivo_fechar = Column(String)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_sa_instance_state']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def flatten(self, obj, data):
+        data['contents'] = obj.contents
+        return data
 
 
 class TabGnet(Base):
