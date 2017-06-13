@@ -22,8 +22,8 @@ db = SQLAlchemy(app)
 
 
 def mk_login(username, passwd):
-    t_list = db_session.query(SisLanc).filter(SisLanc.login == username).all()
-    if t_list.size == 0:
+    t_list = db_session.query(SisCliente).filter(SisCliente.login == username).all()
+    if t_list.__len__ == 0:
         return False
     if t_list[0].senha == passwd:
         return True
