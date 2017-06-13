@@ -1,7 +1,5 @@
 # coding: utf-8
 
-# TODO: Filtrar informações de segurança nos métodos jsonpickle.handlers.__getstate__
-
 from sqlalchemy import BigInteger, Column, DateTime, Enum, Index, Integer, Numeric, String, Table, Text, text
 from sqlalchemy.ext.declarative import declarative_base
 from jsonpickle import handlers
@@ -558,6 +556,7 @@ class SisCliente(Base, handlers.BaseHandler):
     def __getstate__(self):
         state = self.__dict__.copy()
         del state['_sa_instance_state']
+        del state['senha']
         return state
 
     def __setstate__(self, state):
