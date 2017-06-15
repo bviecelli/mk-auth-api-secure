@@ -157,7 +157,7 @@ def logout():
 
 # set the secret key.  keep this really secret:
 app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
-app.debug = True
+app.debug = True    # remover isso para rodar em produção!
 
 if __name__ == '__main__':
     engine = create_engine("mysql://root:vertrigo@"+SERVER_ADDR+"/mkradius")
