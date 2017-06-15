@@ -1,0 +1,8 @@
+flask
+# requests
+# sqlacodegen
+SQLAlchemy
+flask_sqlalchemy
+mysqlclient
+jsonpickle
+pyjwt
