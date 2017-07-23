@@ -6,8 +6,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
-import jsonpickle
 from config import SERVER_ADDR
+from decimal import Decimal
 
 
 app = Flask(__name__)
@@ -22,7 +22,10 @@ db = SQLAlchemy(app)
 
 
 def encapsulate_jwt(pkt):
-    data = jwt.encode({"data": pkt}, JWT_KEY, algorithm='HS256').decode()
+    if USE_JWT:
+        data = jwt.encode({"data": pkt}, JWT_KEY, algorithm='HS256').decode()
+    else:
+        data = pkt
     return data
 
 
@@ -54,7 +57,7 @@ def index():
         logout()
     if 'username' not in session:
         return ret_error('You are not logged in')
-    data = {"result": "success", "user": escape(session['username'])}
+    data = json.dumps({"result": "success", "user": session['username']}, ensure_ascii=False)
     return encapsulate_jwt(data)
 
 
@@ -66,22 +69,29 @@ def titulos():
 
     bill_list = []
     for itm in t_list:
-        bill_list.append(jsonpickle.encode(itm))
-    json_ret = json.dumps(bill_list)
+        lst = vars(itm).copy()
+        lst.__delitem__('_sa_instance_state')
+        bill_list.append(lst)
+    json_ret = json.dumps(bill_list, ensure_ascii=False, default=default)
     return encapsulate_jwt(json_ret)
+
+
+def default(obj):
+    if isinstance(obj, Decimal):
+        return str(obj)
 
 
 @app.route('/conta')
 def conta():
     if 'username' not in session:
         return ret_error('You are not logged in')
-    t_list = db_session.query(SisCliente).filter(SisCliente.login == session['username']).all()
+    t_list = db_session.query(SisCliente).filter(SisCliente.login == session['username']).first()
 
-    c_list = []
-    for itm in t_list:
-        c_list.append(jsonpickle.encode(itm))
-    json_ret = json.dumps(c_list)
-    return encapsulate_jwt(json_ret)
+    lst = vars(t_list).copy()
+    lst.__delitem__('_sa_instance_state')
+    lst.__delitem__('senha')
+    c_list = json.dumps(lst, ensure_ascii=False, default=default)
+    return encapsulate_jwt(c_list)
 
 
 @app.route('/resumo')
@@ -92,8 +102,10 @@ def resumo():
 
     c_list = []
     for itm in t_list:
-        c_list.append(jsonpickle.encode(itm))
-    json_ret = json.dumps(c_list)
+        lst = vars(itm).copy()
+        lst.__delitem__('_sa_instance_state')
+        c_list.append(lst)
+    json_ret = json.dumps(c_list, ensure_ascii=False, default=default)
     return encapsulate_jwt(json_ret)
 
 
@@ -105,8 +117,10 @@ def msgs():
 
     c_list = []
     for itm in t_list:
-        c_list.append(jsonpickle.encode(itm))
-    json_ret = json.dumps(c_list)
+        lst = vars(itm).copy()
+        lst.__delitem__('_sa_instance_state')
+        c_list.append(lst)
+    json_ret = json.dumps(c_list, ensure_ascii=False, default=default)
     return encapsulate_jwt(json_ret)
 
 
@@ -118,19 +132,24 @@ def chamados():
 
     c_list = []
     for itm in t_list:
-        c_list.append(jsonpickle.encode(itm))
-    json_ret = json.dumps(c_list)
+        lst = vars(itm).copy()
+        lst.__delitem__('_sa_instance_state')
+        c_list.append(lst)
+    json_ret = json.dumps(c_list, ensure_ascii=False, default=default)
     return encapsulate_jwt(json_ret)
 
 
 @app.route('/login', methods=['POST'])
 def login():
     if len(request.form['data']) > 0:
-        data = jwt.decode(request.form['data'], JWT_KEY, algorithm='HS256')
+        if USE_JWT:
+            data = jwt.decode(request.form['data'], JWT_KEY, algorithm='HS256')
+        else:
+            data = json.loads(request.form['data'])
         if mk_login(data['username'], data['password']):
             session['username'] = data['username']
-            return redirect(url_for('index'))
-    return redirect(url_for('login'))
+            return encapsulate_jwt(json.dumps({"result": "success", "user": session['username']}, ensure_ascii=False))
+    return ret_error('You are not logged in')
 
 
 @app.route('/login_test', methods=['GET', 'POST'])
@@ -138,7 +157,7 @@ def login_test():
     if request.method == 'POST':
         if mk_login(request.form['username'], request.form['password']):
             session['username'] = request.form['username']
-            return redirect(url_for('index'))
+            return encapsulate_jwt(json.dumps({"result": "success", "user": session['username']}, ensure_ascii=False))
         return redirect(url_for('login_test'))
     return '''
         <form method="post">
@@ -155,15 +174,18 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
+
+
 # set the secret key.  keep this really secret:
 app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
 app.debug = True    # remover isso para rodar em produção!
+USE_JWT = False
 
 if __name__ == '__main__':
     engine = create_engine("mysql://root:vertrigo@"+SERVER_ADDR+"/mkradius")
     Session = sessionmaker(bind=engine)
     db_session = Session()
-    app.run()
+    app.run(host='192.168.1.14', port=5000)
 
 # TODO: Trocar a key dos cookies e JWT_KEY para cada instância em produção
 # TODO: Remover rota login_test para o release

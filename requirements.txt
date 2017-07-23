@@ -4,5 +4,5 @@ flask
 SQLAlchemy
 flask_sqlalchemy
 mysqlclient
-jsonpickle
+# jsonpickle
 pyjwt
