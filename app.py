@@ -30,7 +30,7 @@ def encapsulate_jwt(pkt):
 
 
 def ret_error(err):
-    data = {"error": err}
+    data = json.dumps({"result": "failed", "cause": err}, ensure_ascii=False)
     return encapsulate_jwt(data)
 
 
@@ -141,6 +141,7 @@ def chamados():
 
 @app.route('/login', methods=['POST'])
 def login():
+    cause = "Request error"
     if len(request.form['data']) > 0:
         if USE_JWT:
             data = jwt.decode(request.form['data'], JWT_KEY, algorithm='HS256')
@@ -149,7 +150,8 @@ def login():
         if mk_login(data['username'], data['password']):
             session['username'] = data['username']
             return encapsulate_jwt(json.dumps({"result": "success", "user": session['username']}, ensure_ascii=False))
-    return ret_error('You are not logged in')
+        cause = "Incorrect credentials"
+    return ret_error('Failed to login: '+cause)
 
 
 @app.route('/login_test', methods=['GET', 'POST'])
